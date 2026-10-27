@@ -19,8 +19,8 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
-  const [username, setUsername] = useState('arshan');
-  const [password, setPassword] = useState('Arshan@ahmed');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -88,6 +88,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                   placeholder="Enter username"
                   placeholderTextColor={colors.textMuted}
                   autoCapitalize="none"
+                  autoComplete="off"
                 />
               </View>
             </View>
@@ -107,6 +108,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                   placeholderTextColor={colors.textMuted}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
+                  autoComplete="off"
                 />
                 <TouchableOpacity
                   style={styles.eyeBtn}
@@ -137,17 +139,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 </>
               )}
             </TouchableOpacity>
-
-            {/* Default credentials reminder */}
-            <View style={styles.hintBox}>
-              <Ionicons name="key-outline" size={15} color={colors.primary} />
-              <View style={styles.hintContent}>
-                <Text style={styles.hintTitle}>Default Credentials:</Text>
-                <Text style={styles.hintText}>
-                  Username: <Text style={styles.codeText}>arshan</Text> • Password: <Text style={styles.codeText}>Arshan@ahmed</Text>
-                </Text>
-              </View>
-            </View>
           </View>
         </View>
       </ScrollView>
@@ -281,34 +272,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 15
-  },
-  hintBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    marginTop: spacing.xs
-  },
-  hintContent: {
-    flex: 1
-  },
-  hintTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.primary
-  },
-  hintText: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    marginTop: 2
-  },
-  codeText: {
-    fontFamily: 'monospace',
-    fontWeight: '700',
-    color: colors.textPrimary
   }
 });
