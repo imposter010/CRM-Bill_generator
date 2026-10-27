@@ -14,3 +14,12 @@ ehthumbs.db
 *.swp
 *.swo
 *~
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+*.tsbuildinfo

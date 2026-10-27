@@ -1,31 +1,76 @@
-# NA NATURAL AIR CONDITION® Bill Generator
+# NA NATURAL AIR CONDITION® CRM Bill Generator
 
-A plug-and-play, beautiful, glassmorphic GST Tax Invoice and billing application designed for local execution. It requires **no server configuration** or complex installation.
+A modern, cross-platform **React Native & Expo** GST Tax Invoice and Billing application designed for mobile (iOS, Android) and Desktop / Web.
 
 ---
 
 ## ⚡ Quick Start
 
-### 🪟 Windows (Double-Click Run)
-1. Double-click the file `start.bat` in this folder.
-2. A command prompt will open, start the local server, and launch the application directly in your web browser.
+### 🌐 Web / Desktop
+Run the start script or standard npm command:
 
-### 🍎 macOS / 🐧 Linux (Terminal Run)
-1. Open your terminal in this directory.
-2. Run the shell script:
-   ```bash
-   ./start.sh
-   ```
-3. The server will spin up and open your default browser to the Dashboard instantly.
+- **macOS / Linux**:
+  ```bash
+  ./start.sh
+  ```
+  *or*
+  ```bash
+  npm run web
+  ```
+
+- **Windows**:
+  Double-click `start.bat` or run:
+  ```cmd
+  npm run web
+  ```
+
+### 📱 Mobile (iOS & Android)
+Start Expo and scan the QR code with **Expo Go** on your device, or run directly on simulators:
+```bash
+# Android emulator / connected device:
+npm run android
+
+# iOS simulator:
+npm run ios
+```
 
 ---
 
-## 📋 Requirements
-- **PHP 8.0 or higher**: The application runs on the built-in PHP development server.
-- **SQLite3 Extension**: Configured automatically by default in standard PHP installations.
+## ✨ Features
+
+- **Dashboard**:
+  - Live revenue analytics: Total Billed, Realized Collections, Pending Collections, Total Invoices count.
+  - Quick actions and recent invoices timeline.
+
+- **GST Tax Invoice Generator**:
+  - Auto-incrementing invoice numbering (e.g. `INV-0001`).
+  - Dynamic line items (Description, HSN/SAC code, Quantity, Rate, auto-computed Amount).
+  - Indian GST Tax calculation (CGST 9% + SGST 9% = 18%).
+  - Automatic Indian Numbering System words conversion (`Two Thousand One Hundred and Ninety Four Rupees and Eighty Paise Only`).
+  - Status management (`Draft`, `Sent`, `Paid`, `Cancelled`).
+
+- **Tax Invoice Printing & PDF Sharing**:
+  - Original GST Tax Invoice layout preview.
+  - One-click **Print** dialog.
+  - Direct **PDF Export & Share** via WhatsApp, Email, AirDrop, or download.
+
+- **Client Directory**:
+  - Client billing records (Name, GSTIN, Phone, Email, Billing Address).
+  - Quick-select client in invoice creator with auto-fill.
+  - Per-client invoicing history and billing stats.
+
+- **Company & Bank Settings**:
+  - Issuer company information, state code, GSTIN.
+  - Bank account details (Bank name, branch, account number, IFSC code).
+  - Customizable Terms & Conditions.
+  - Database Backup & Restore (JSON Export / Import).
 
 ---
 
-## 💾 Database & Backups
-- The application uses a local, self-contained SQLite database stored at **`data/bill_generator.db`**.
-- To make a full backup of all your invoices, settings, and clients, simply **copy the `data/` folder** to a safe location. To restore, copy it back!
+## 🛠️ Tech Stack
+
+- **Framework**: React Native & Expo SDK 58
+- **Language**: TypeScript
+- **State & Storage**: AsyncStorage (cross-platform offline storage)
+- **Printing / PDF**: `expo-print` & `expo-sharing`
+- **Icons**: `@expo/vector-icons` (Ionicons)
