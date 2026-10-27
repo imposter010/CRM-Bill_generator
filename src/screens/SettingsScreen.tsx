@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { checkServerHealth, getBackendApiUrl, setBackendApiUrl } from '../services/api';
 import { colors, spacing } from '../theme';
 import { CompanySettings } from '../types';
 
@@ -47,6 +48,25 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [terms, setTerms] = useState(company.terms);
   const [cgstRate, setCgstRate] = useState(String(company.defaultCgstRate || 9));
   const [sgstRate, setSgstRate] = useState(String(company.defaultSgstRate || 9));
+
+  // MongoDB API server config
+  const [apiUrl, setApiUrl] = useState('http://localhost:5001/api');
+  const [connectionStatus, setConnectionStatus] = useState<string>('Not tested');
+  const [testingConnection, setTestingConnection] = useState(false);
+
+  React.useEffect(() => {
+    getBackendApiUrl().then(url => {
+      setApiUrl(url);
+    });
+  }, []);
+
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    await setBackendApiUrl(apiUrl);
+    const result = await checkServerHealth(apiUrl);
+    setConnectionStatus(result.message);
+    setTestingConnection(false);
+  };
 
   // Backup modal
   const [backupModalVisible, setBackupModalVisible] = useState(false);
@@ -331,6 +351,50 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </View>
       </View>
 
+      {/* Cloud Database & MongoDB Server Configuration Card */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="server-outline" size={18} color={colors.primary} />
+          <Text style={styles.cardTitle}>Cloud Database & Server (MongoDB)</Text>
+        </View>
+
+        <Text style={styles.maintenanceDesc}>
+          Connect your Web deployment and Android APK to the same MongoDB backend so your invoices and clients stay synchronized in real time across all devices.
+        </Text>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Backend API Server Endpoint</Text>
+          <TextInput
+            style={styles.input}
+            value={apiUrl}
+            onChangeText={setApiUrl}
+            placeholder="e.g. https://my-bill-app.koyeb.app/api or http://localhost:5001/api"
+            placeholderTextColor={colors.textMuted}
+            autoCapitalize="none"
+          />
+        </View>
+
+        <View style={styles.serverStatusRow}>
+          <TouchableOpacity
+            style={[styles.maintBtn, { backgroundColor: colors.primaryMuted, borderColor: colors.primary }]}
+            onPress={handleTestConnection}
+            disabled={testingConnection}
+          >
+            <Ionicons name="wifi-outline" size={18} color={colors.primary} />
+            <Text style={styles.maintBtnText}>
+              {testingConnection ? 'Testing Connection...' : 'Save & Test Connection'}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.statusPill}>
+            <Text style={styles.statusPillLabel}>Status: </Text>
+            <Text style={[styles.statusPillValue, { color: connectionStatus.includes('Connected') ? colors.success : colors.warning }]}>
+              {connectionStatus}
+            </Text>
+          </View>
+        </View>
+      </View>
+
       {/* Backup & System Maintenance Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -536,6 +600,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.primary
+  },
+  serverStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: 4
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  statusPillLabel: {
+    fontSize: 12,
+    color: colors.textSecondary
+  },
+  statusPillValue: {
+    fontSize: 12,
+    fontWeight: '700'
   },
   modalOverlay: {
     flex: 1,
