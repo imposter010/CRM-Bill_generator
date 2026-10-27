@@ -9,13 +9,15 @@ interface HeaderProps {
   company: CompanySettings;
   onNavigate: (screen: ActiveScreen) => void;
   onNewInvoice: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentScreen,
   company,
   onNavigate,
-  onNewInvoice
+  onNewInvoice,
+  onLogout
 }) => {
   const getScreenTitle = () => {
     switch (currentScreen) {
@@ -69,8 +71,18 @@ export const Header: React.FC<HeaderProps> = ({
           onPress={() => onNavigate('settings')}
           activeOpacity={0.7}
         >
-          <Ionicons name="settings-outline" size={20} color={colors.textSecondary} />
+          <Ionicons name="settings-outline" size={19} color={colors.textSecondary} />
         </TouchableOpacity>
+
+        {onLogout && (
+          <TouchableOpacity
+            style={[styles.iconBtn, { borderColor: colors.dangerMuted }]}
+            onPress={onLogout}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="log-out-outline" size={19} color={colors.danger} />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

@@ -13,7 +13,9 @@ import { DashboardScreen } from './src/screens/DashboardScreen';
 import { InvoiceFormScreen } from './src/screens/InvoiceFormScreen';
 import { InvoicesScreen } from './src/screens/InvoicesScreen';
 import { InvoiceViewScreen } from './src/screens/InvoiceViewScreen';
+import { LoginScreen } from './src/screens/LoginScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { checkIsLoggedIn, initAuth, logout } from './src/services/auth';
 import {
   deleteClient,
   deleteInvoice,
@@ -34,6 +36,7 @@ import { ActiveScreen, Client, CompanySettings, Invoice, InvoiceStatus } from '.
 
 export default function App() {
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>('dashboard');
 
   const [company, setCompany] = useState<CompanySettings>({
@@ -60,6 +63,10 @@ export default function App() {
   // Load data from storage
   const loadData = async () => {
     await initializeStorage();
+    await initAuth();
+    const loggedIn = await checkIsLoggedIn();
+    setIsAuthenticated(loggedIn);
+
     const [savedCompany, savedClients, savedInvoices] = await Promise.all([
       getCompanySettings(),
       getClients(),
@@ -145,11 +152,26 @@ export default function App() {
     return success;
   };
 
+  const handleLogout = async () => {
+    await logout();
+    setIsAuthenticated(false);
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
+    );
+  }
+
+  // If not logged in, show Login Screen
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="light" />
+        <LoginScreen onLoginSuccess={() => setIsAuthenticated(true)} />
+      </SafeAreaView>
     );
   }
 
@@ -163,6 +185,7 @@ export default function App() {
         company={company}
         onNavigate={setCurrentScreen}
         onNewInvoice={handleNewInvoice}
+        onLogout={handleLogout}
       />
 
       {/* Screen Body */}
@@ -241,6 +264,7 @@ export default function App() {
             onExportData={exportAllData}
             onImportData={handleImportData}
             onResetData={handleResetData}
+            onLogout={handleLogout}
           />
         )}
       </View>

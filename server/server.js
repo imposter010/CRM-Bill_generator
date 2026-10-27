@@ -6,6 +6,7 @@ require('dotenv').config();
 const Company = require('./models/Company');
 const Client = require('./models/Client');
 const Invoice = require('./models/Invoice');
+const User = require('./models/User');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -19,6 +20,17 @@ mongoose
   .connect(MONGODB_URI)
   .then(async () => {
     console.log('✅ Connected to MongoDB successfully');
+
+    // Ensure default admin user exists
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      await User.create({
+        username: 'arshan',
+        password: 'Arshan@ahmed'
+      });
+      console.log('👤 Default admin user created: arshan');
+    }
+
     // Ensure default company settings exist
     const count = await Company.countDocuments();
     if (count === 0) {
@@ -52,6 +64,58 @@ app.get('/api/health', (req, res) => {
     database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
     timestamp: new Date().toISOString()
   });
+});
+
+// Authentication Routes
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    const user = await User.findOne({ username: username.trim().toLowerCase() });
+    if (!user || user.password !== password) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    res.json({
+      success: true,
+      username: user.username,
+      message: 'Login successful'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/change-password', async (req, res) => {
+  try {
+    const { username, currentPassword, newPassword } = req.body;
+    if (!username || !currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    const user = await User.findOne({ username: username.trim().toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.password !== currentPassword) {
+      return res.status(401).json({ error: 'Incorrect current password' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Company Settings Routes

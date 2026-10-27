@@ -12,6 +12,7 @@ import {
   View
 } from 'react-native';
 import { checkServerHealth, getBackendApiUrl, setBackendApiUrl } from '../services/api';
+import { changePassword } from '../services/auth';
 import { colors, spacing } from '../theme';
 import { CompanySettings } from '../types';
 
@@ -21,6 +22,7 @@ interface SettingsScreenProps {
   onExportData: () => Promise<string>;
   onImportData: (jsonStr: string) => Promise<boolean>;
   onResetData: () => Promise<void>;
+  onLogout?: () => void;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
@@ -28,7 +30,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onSaveCompany,
   onExportData,
   onImportData,
-  onResetData
+  onResetData,
+  onLogout
 }) => {
   // Company details
   const [name, setName] = useState(company.name);
@@ -53,6 +56,42 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [apiUrl, setApiUrl] = useState('http://localhost:5001/api');
   const [connectionStatus, setConnectionStatus] = useState<string>('Not tested');
   const [testingConnection, setTestingConnection] = useState(false);
+
+  // Password reset state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordUpdating, setPasswordUpdating] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
+      showMsg('Validation Error', 'Please fill in all password fields.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showMsg('Validation Error', 'New password and confirmation do not match.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      showMsg('Validation Error', 'New password must be at least 6 characters long.');
+      return;
+    }
+
+    setPasswordUpdating(true);
+    const res = await changePassword(currentPassword, newPassword);
+    setPasswordUpdating(false);
+
+    if (res.success) {
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      showMsg('Success', res.message);
+    } else {
+      showMsg('Error', res.message);
+    }
+  };
 
   React.useEffect(() => {
     getBackendApiUrl().then(url => {
@@ -392,6 +431,81 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               {connectionStatus}
             </Text>
           </View>
+        </View>
+      </View>
+
+      {/* Account Security & Password Reset Card */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="shield-outline" size={18} color={colors.primary} />
+          <Text style={styles.cardTitle}>Account Security & Password Reset</Text>
+        </View>
+
+        <Text style={styles.maintenanceDesc}>
+          Logged in as <Text style={{ color: colors.textPrimary, fontWeight: '700' }}>arshan</Text>. You can update your password below. It will synchronize with your MongoDB database and local device.
+        </Text>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Current Password *</Text>
+          <TextInput
+            style={styles.input}
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            placeholder="Enter current password"
+            placeholderTextColor={colors.textMuted}
+            secureTextEntry
+          />
+        </View>
+
+        <View style={styles.formRow}>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>New Password (min 6 chars) *</Text>
+            <TextInput
+              style={styles.input}
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholder="Enter new password"
+              placeholderTextColor={colors.textMuted}
+              secureTextEntry
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Confirm New Password *</Text>
+            <TextInput
+              style={styles.input}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Re-enter new password"
+              placeholderTextColor={colors.textMuted}
+              secureTextEntry
+            />
+          </View>
+        </View>
+
+        <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: 4, flexWrap: 'wrap' }}>
+          <TouchableOpacity
+            style={[styles.maintBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]}
+            onPress={handleChangePassword}
+            disabled={passwordUpdating}
+          >
+            <Ionicons name="key-outline" size={18} color="#FFFFFF" />
+            <Text style={[styles.maintBtnText, { color: '#FFFFFF', fontWeight: '700' }]}>
+              {passwordUpdating ? 'Updating Password...' : 'Update Password'}
+            </Text>
+          </TouchableOpacity>
+
+          {onLogout && (
+            <TouchableOpacity
+              style={[styles.maintBtn, { borderColor: colors.danger, backgroundColor: colors.dangerMuted }]}
+              onPress={onLogout}
+            >
+              <Ionicons name="log-out-outline" size={18} color={colors.danger} />
+              <Text style={[styles.maintBtnText, { color: colors.danger, fontWeight: '700' }]}>
+                Sign Out (Logout)
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
