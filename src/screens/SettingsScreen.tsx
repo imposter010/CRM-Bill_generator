@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { checkServerHealth, getBackendApiUrl, setBackendApiUrl } from '../services/api';
+import { checkServerHealth, getDefaultApiUrl, getBackendApiUrl, setBackendApiUrl } from '../services/api';
 import { changePassword } from '../services/auth';
 import { colors, spacing } from '../theme';
 import { CompanySettings } from '../types';
@@ -53,7 +53,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [sgstRate, setSgstRate] = useState(String(company.defaultSgstRate || 9));
 
   // MongoDB API server config
-  const [apiUrl, setApiUrl] = useState('http://localhost:5001/api');
+  const [apiUrl, setApiUrl] = useState(getDefaultApiUrl());
   const [connectionStatus, setConnectionStatus] = useState<string>('Not tested');
   const [testingConnection, setTestingConnection] = useState(false);
 

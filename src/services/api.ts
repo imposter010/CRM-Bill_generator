@@ -12,13 +12,22 @@ export function getDefaultApiUrl(): string {
 
 export const DEFAULT_API_URL = getDefaultApiUrl();
 
-/**
- * Get current API URL from storage or default
- */
 export async function getBackendApiUrl(): Promise<string> {
   try {
     const saved = await AsyncStorage.getItem(API_STORAGE_KEY);
     if (saved && saved.trim()) {
+      // If we are on a remote web domain (e.g. vercel.app) but saved url is localhost, auto-fix to current origin
+      if (
+        typeof window !== 'undefined' &&
+        window.location &&
+        window.location.hostname !== 'localhost' &&
+        window.location.hostname !== '127.0.0.1' &&
+        (saved.includes('localhost') || saved.includes('127.0.0.1'))
+      ) {
+        const correctUrl = `${window.location.origin}/api`;
+        await AsyncStorage.setItem(API_STORAGE_KEY, correctUrl);
+        return correctUrl;
+      }
       return saved;
     }
     return getDefaultApiUrl();
