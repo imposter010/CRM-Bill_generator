@@ -2,7 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Client, CompanySettings, Invoice, InvoiceStatus } from '../types';
 
 const API_STORAGE_KEY = '@crm_backend_api_url';
-export const DEFAULT_API_URL = 'http://localhost:5001/api';
+
+export function getDefaultApiUrl(): string {
+  if (typeof window !== 'undefined' && window.location && window.location.origin) {
+    return `${window.location.origin}/api`;
+  }
+  return 'http://localhost:5001/api';
+}
+
+export const DEFAULT_API_URL = getDefaultApiUrl();
 
 /**
  * Get current API URL from storage or default
@@ -10,9 +18,12 @@ export const DEFAULT_API_URL = 'http://localhost:5001/api';
 export async function getBackendApiUrl(): Promise<string> {
   try {
     const saved = await AsyncStorage.getItem(API_STORAGE_KEY);
-    return saved || DEFAULT_API_URL;
+    if (saved && saved.trim()) {
+      return saved;
+    }
+    return getDefaultApiUrl();
   } catch {
-    return DEFAULT_API_URL;
+    return getDefaultApiUrl();
   }
 }
 

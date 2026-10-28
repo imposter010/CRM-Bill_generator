@@ -10,12 +10,12 @@ export interface AuthUser {
 }
 
 const DEFAULT_AUTH_USER: AuthUser = {
-  username: 'arshan',
+  username: 'aarshan',
   password: 'Arshan@ahmed'
 };
 
 /**
- * Initialize auth credentials with default user (arshan / Arshan@ahmed)
+ * Initialize auth credentials with default user (aarshan / Arshan@ahmed)
  */
 export async function initAuth(): Promise<AuthUser> {
   try {
@@ -78,12 +78,17 @@ export async function login(
     // Server is unreachable, continue with local authentication fallback
   }
 
-  // Local fallback authentication
+  // Local fallback authentication (supports both aarshan and arshan with Arshan@ahmed)
   const storedUser = await initAuth();
-  if (
+  const isDefaultValid =
+    (username === 'aarshan' || username === 'arshan') &&
+    password === 'Arshan@ahmed';
+  const isStoredValid =
     username === storedUser.username.toLowerCase() &&
-    password === storedUser.password
-  ) {
+    password === storedUser.password;
+
+  if (isDefaultValid || isStoredValid) {
+    await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify({ username, password }));
     await AsyncStorage.setItem(AUTH_SESSION_KEY, 'true');
     return { success: true };
   }
