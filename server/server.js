@@ -42,14 +42,18 @@ async function connectDB() {
     isConnected = conn.connections[0].readyState === 1;
     console.log('✅ Connected to MongoDB successfully');
 
-    // Ensure default admin user exists
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      await User.create({
-        username: 'arshan',
-        password: 'Arshan@ahmed'
-      });
-      console.log('👤 Default admin user created: arshan');
+    // Ensure admin users exist
+    const defaultUsers = [
+      { username: 'aarshan', password: 'Arshan@ahmed' },
+      { username: 'arshan', password: 'Arshan@ahmed' }
+    ];
+    for (const u of defaultUsers) {
+      await User.findOneAndUpdate(
+        { username: u.username },
+        { username: u.username, password: u.password },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+      console.log(`👤 User verified/created in MongoDB: ${u.username}`);
     }
 
     // Ensure default company settings exist
