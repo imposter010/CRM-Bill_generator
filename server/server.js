@@ -18,10 +18,28 @@ const MONGODB_URI =
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
-mongoose
-  .connect(MONGODB_URI)
-  .then(async () => {
+// Normalize rewritten paths from Vercel edge
+app.use((req, res, next) => {
+  if (req.headers['x-matched-path']) {
+    req.url = req.headers['x-matched-path'];
+  }
+  next();
+});
+
+let isConnected = false;
+
+async function connectDB() {
+  if (isConnected && mongoose.connection.readyState === 1) return;
+  const MONGODB_URI =
+    process.env.MONGODB_URI ||
+    process.env.MONGO_URL ||
+    'mongodb://127.0.0.1:27017/bill_generator';
+
+  try {
+    const conn = await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    isConnected = conn.connections[0].readyState === 1;
     console.log('✅ Connected to MongoDB successfully');
 
     // Ensure default admin user exists
@@ -55,10 +73,21 @@ mongoose
       });
       console.log('🏢 Default company profile initialized');
     }
-  })
-  .catch(err => {
+  } catch (err) {
     console.error('❌ MongoDB connection error:', err.message);
-  });
+  }
+}
+
+// Initial connection attempt
+connectDB();
+
+// Middleware to ensure DB connection is ready on serverless calls
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    await connectDB();
+  }
+  next();
+});
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -250,21 +279,20 @@ app.patch('/api/invoices/:id/status', async (req, res) => {
   }
 });
 
-// Serve compiled React Native Web frontend if dist exists
-const path = require('path');
-const fs = require('fs');
-const distPath = path.join(__dirname, '../dist');
-
-if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(distPath, 'index.html'));
-    }
-  });
-}
-
 if (require.main === module) {
+  const path = require('path');
+  const fs = require('fs');
+  const distPath = path.join(__dirname, '../dist');
+
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(distPath, 'index.html'));
+      }
+    });
+  }
+
   app.listen(PORT, () => {
     console.log(`🚀 Bill Generator API Server running on port ${PORT}`);
   });
