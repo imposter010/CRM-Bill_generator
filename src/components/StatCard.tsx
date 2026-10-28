@@ -37,12 +37,23 @@ export const StatCard: React.FC<StatCardProps> = ({
     <View style={[styles.card, { borderLeftColor: scheme.main }]}>
       <View style={styles.content}>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.value} numberOfLines={1}>{value}</Text>
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+          <Text style={styles.title} numberOfLines={1}>{title}</Text>
+          <Text
+            style={styles.value}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >
+            {value}
+          </Text>
+          {subtitle ? (
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          ) : null}
         </View>
         <View style={[styles.iconWrapper, { backgroundColor: scheme.bg }]}>
-          <Ionicons name={icon} size={22} color={scheme.main} />
+          <Ionicons name={icon} size={20} color={scheme.main} />
         </View>
       </View>
     </View>
@@ -52,10 +63,11 @@ export const StatCard: React.FC<StatCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    minWidth: 150,
+    minWidth: '46%',
+    maxWidth: '50%',
     backgroundColor: colors.surfaceElevated,
     borderRadius: 12,
-    padding: spacing.md,
+    padding: spacing.md - 2,
     borderWidth: 1,
     borderColor: colors.border,
     borderLeftWidth: 4,
@@ -72,31 +84,32 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
-    marginRight: spacing.sm
+    marginRight: 6
   },
   title: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: colors.textSecondary,
     marginBottom: 4,
     textTransform: 'uppercase',
-    letterSpacing: 0.5
+    letterSpacing: 0.4
   },
   value: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
     color: colors.textPrimary
   },
   subtitle: {
-    fontSize: 11,
+    fontSize: 10,
     color: colors.textMuted,
     marginTop: 2
   },
   iconWrapper: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 9,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    flexShrink: 0
   }
 });

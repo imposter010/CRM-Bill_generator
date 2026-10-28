@@ -2,8 +2,11 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
+  Platform,
   SafeAreaView,
   StyleSheet,
+  ToastAndroid,
   View
 } from 'react-native';
 import { BottomNav } from './src/components/BottomNav';
@@ -38,6 +41,61 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>('dashboard');
+  const [screenHistory, setScreenHistory] = useState<ActiveScreen[]>(['dashboard']);
+  const [lastBackPress, setLastBackPress] = useState<number>(0);
+
+  const navigateTo = (screen: ActiveScreen) => {
+    if (screen !== currentScreen) {
+      setScreenHistory(prev => [...prev, screen]);
+      setCurrentScreen(screen);
+    }
+  };
+
+  const handleGoBack = (): boolean => {
+    // If viewing, editing or creating an invoice, go back to invoices list
+    if (
+      currentScreen === 'invoice-view' ||
+      currentScreen === 'invoice-edit' ||
+      currentScreen === 'invoice-create'
+    ) {
+      setCurrentScreen('invoices');
+      setScreenHistory(prev => prev.filter(s => s !== currentScreen));
+      return true;
+    }
+
+    // If on another main screen (clients, invoices, settings), return to dashboard
+    if (currentScreen !== 'dashboard') {
+      setCurrentScreen('dashboard');
+      setScreenHistory(['dashboard']);
+      return true;
+    }
+
+    // If already on dashboard, require a second press within 2 seconds to exit app
+    const now = Date.now();
+    if (now - lastBackPress < 2000) {
+      BackHandler.exitApp();
+      return true;
+    }
+
+    setLastBackPress(now);
+    if (Platform.OS === 'android') {
+      ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+    }
+    return true; // Prevent app exit on single back press
+  };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      return handleGoBack();
+    };
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress
+    );
+
+    return () => subscription.remove();
+  }, [currentScreen, lastBackPress]);
 
   const [company, setCompany] = useState<CompanySettings>({
     id: 'company-default',
@@ -125,23 +183,23 @@ export default function App() {
 
   const handleNewInvoice = () => {
     setSelectedInvoice(null);
-    setCurrentScreen('invoice-create');
+    navigateTo('invoice-create');
   };
 
   const handleViewInvoice = (inv: Invoice) => {
     setSelectedInvoice(inv);
-    setCurrentScreen('invoice-view');
+    navigateTo('invoice-view');
   };
 
   const handleEditInvoice = (inv: Invoice) => {
     setSelectedInvoice(inv);
-    setCurrentScreen('invoice-edit');
+    navigateTo('invoice-edit');
   };
 
   const handleResetData = async () => {
     await resetToDefaults();
     await loadData();
-    setCurrentScreen('dashboard');
+    navigateTo('dashboard');
   };
 
   const handleImportData = async (jsonStr: string) => {
@@ -183,8 +241,9 @@ export default function App() {
       <Header
         currentScreen={currentScreen}
         company={company}
-        onNavigate={setCurrentScreen}
+        onNavigate={navigateTo}
         onNewInvoice={handleNewInvoice}
+        onBack={handleGoBack}
         onLogout={handleLogout}
       />
 
@@ -194,7 +253,7 @@ export default function App() {
           <DashboardScreen
             invoices={invoices}
             clientCount={clients.length}
-            onNavigate={setCurrentScreen}
+            onNavigate={navigateTo}
             onViewInvoice={handleViewInvoice}
             onEditInvoice={handleEditInvoice}
             onNewInvoice={handleNewInvoice}
@@ -218,7 +277,7 @@ export default function App() {
             invoices={invoices}
             company={company}
             onSave={handleSaveInvoice}
-            onCancel={() => setCurrentScreen('invoices')}
+            onCancel={() => navigateTo('invoices')}
           />
         )}
 
@@ -231,9 +290,9 @@ export default function App() {
             onSave={handleSaveInvoice}
             onCancel={() => {
               if (selectedInvoice) {
-                setCurrentScreen('invoice-view');
+                navigateTo('invoice-view');
               } else {
-                setCurrentScreen('invoices');
+                navigateTo('invoices');
               }
             }}
           />
@@ -244,7 +303,7 @@ export default function App() {
             invoice={selectedInvoice}
             company={company}
             onEdit={handleEditInvoice}
-            onBack={() => setCurrentScreen('invoices')}
+            onBack={() => navigateTo('invoices')}
           />
         )}
 
@@ -276,7 +335,7 @@ export default function App() {
           if (screen === 'invoice-create') {
             handleNewInvoice();
           } else {
-            setCurrentScreen(screen);
+            navigateTo(screen);
           }
         }}
       />

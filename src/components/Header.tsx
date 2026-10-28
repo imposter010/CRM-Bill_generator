@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { colors, spacing } from '../theme';
 import { ActiveScreen, CompanySettings } from '../types';
 
@@ -9,6 +9,7 @@ interface HeaderProps {
   company: CompanySettings;
   onNavigate: (screen: ActiveScreen) => void;
   onNewInvoice: () => void;
+  onBack?: () => void;
   onLogout?: () => void;
 }
 
@@ -17,8 +18,13 @@ export const Header: React.FC<HeaderProps> = ({
   company,
   onNavigate,
   onNewInvoice,
+  onBack,
   onLogout
 }) => {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 680;
+  const isDashboard = currentScreen === 'dashboard';
+
   const getScreenTitle = () => {
     switch (currentScreen) {
       case 'dashboard':
@@ -34,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
       case 'clients':
         return 'Client Management';
       case 'settings':
-        return 'Company & System Settings';
+        return 'Settings & Profile';
       default:
         return 'Bill Generator';
     }
@@ -43,19 +49,33 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.left}>
-        <View style={styles.brandBadge}>
-          <Ionicons name="receipt" size={18} color="#FFFFFF" />
-        </View>
-        <View>
+        {!isDashboard && onBack ? (
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={onBack}
+            activeOpacity={0.7}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.brandBadge}>
+            <Ionicons name="receipt" size={18} color="#FFFFFF" />
+          </View>
+        )}
+
+        <View style={styles.titleContainer}>
           <Text style={styles.companyName} numberOfLines={1}>
             {company.name || 'NA NATURAL AIR CONDITION'}
           </Text>
-          <Text style={styles.screenTitle}>{getScreenTitle()}</Text>
+          <Text style={styles.screenTitle} numberOfLines={1}>
+            {getScreenTitle()}
+          </Text>
         </View>
       </View>
 
       <View style={styles.right}>
-        {currentScreen !== 'invoice-create' && (
+        {!isMobile && currentScreen !== 'invoice-create' && (
           <TouchableOpacity
             style={styles.actionBtn}
             onPress={onNewInvoice}
@@ -66,13 +86,15 @@ export const Header: React.FC<HeaderProps> = ({
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity
-          style={styles.iconBtn}
-          onPress={() => onNavigate('settings')}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="settings-outline" size={19} color={colors.textSecondary} />
-        </TouchableOpacity>
+        {currentScreen !== 'settings' && (
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() => onNavigate('settings')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="settings-outline" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+        )}
 
         {onLogout && (
           <TouchableOpacity
@@ -80,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({
             onPress={onLogout}
             activeOpacity={0.7}
           >
-            <Ionicons name="log-out-outline" size={19} color={colors.danger} />
+            <Ionicons name="log-out-outline" size={18} color={colors.danger} />
           </TouchableOpacity>
         )}
       </View>
@@ -93,8 +115,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 4,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -103,13 +125,14 @@ const styles = StyleSheet.create({
   left: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    flex: 1
+    gap: spacing.sm + 2,
+    flex: 1,
+    marginRight: spacing.sm
   },
   brandBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 9,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -119,15 +142,28 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3
   },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 9,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  titleContainer: {
+    flex: 1
+  },
   companyName: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: colors.primary,
     textTransform: 'uppercase',
     letterSpacing: 0.8
   },
   screenTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.textPrimary,
     marginTop: 1
@@ -135,7 +171,8 @@ const styles = StyleSheet.create({
   right: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm
+    gap: 8,
+    flexShrink: 0
   },
   actionBtn: {
     backgroundColor: colors.primary,
@@ -143,12 +180,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: spacing.md,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: 8
   },
   actionBtnText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600'
   },
   iconBtn: {

@@ -79,7 +79,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           subtitle="All active invoices"
         />
         <StatCard
-          title="Collections (Paid)"
+          title="Total Collected"
           value={formatCurrency(totalPaid)}
           icon="checkmark-circle-outline"
           colorType="success"
@@ -253,8 +253,9 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
-    marginBottom: spacing.xl
+    gap: spacing.sm + 2,
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg
   },
   sectionHeader: {
     marginBottom: spacing.sm
