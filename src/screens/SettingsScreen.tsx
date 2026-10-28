@@ -11,8 +11,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { checkServerHealth, getDefaultApiUrl, getBackendApiUrl, setBackendApiUrl } from '../services/api';
-import { changePassword } from '../services/auth';
+import { changePassword, getCurrentUsername } from '../services/auth';
 import { colors, spacing } from '../theme';
 import { CompanySettings } from '../types';
 
@@ -52,12 +51,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [cgstRate, setCgstRate] = useState(String(company.defaultCgstRate || 9));
   const [sgstRate, setSgstRate] = useState(String(company.defaultSgstRate || 9));
 
-  // MongoDB API server config
-  const [apiUrl, setApiUrl] = useState(getDefaultApiUrl());
-  const [connectionStatus, setConnectionStatus] = useState<string>('Not tested');
-  const [testingConnection, setTestingConnection] = useState(false);
-
   // Password reset state
+  const [loggedInUser, setLoggedInUser] = useState('aarshan');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -94,18 +89,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   };
 
   React.useEffect(() => {
-    getBackendApiUrl().then(url => {
-      setApiUrl(url);
+    getCurrentUsername().then(u => {
+      if (u) setLoggedInUser(u);
     });
   }, []);
-
-  const handleTestConnection = async () => {
-    setTestingConnection(true);
-    await setBackendApiUrl(apiUrl);
-    const result = await checkServerHealth(apiUrl);
-    setConnectionStatus(result.message);
-    setTestingConnection(false);
-  };
 
   // Backup modal
   const [backupModalVisible, setBackupModalVisible] = useState(false);
@@ -390,50 +377,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </View>
       </View>
 
-      {/* Cloud Database & MongoDB Server Configuration Card */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Ionicons name="server-outline" size={18} color={colors.primary} />
-          <Text style={styles.cardTitle}>Cloud Database & Server (MongoDB)</Text>
-        </View>
-
-        <Text style={styles.maintenanceDesc}>
-          Connect your Web deployment and Android APK to the same MongoDB backend so your invoices and clients stay synchronized in real time across all devices.
-        </Text>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Backend API Server Endpoint</Text>
-          <TextInput
-            style={styles.input}
-            value={apiUrl}
-            onChangeText={setApiUrl}
-            placeholder="e.g. https://my-bill-app.koyeb.app/api or http://localhost:5001/api"
-            placeholderTextColor={colors.textMuted}
-            autoCapitalize="none"
-          />
-        </View>
-
-        <View style={styles.serverStatusRow}>
-          <TouchableOpacity
-            style={[styles.maintBtn, { backgroundColor: colors.primaryMuted, borderColor: colors.primary }]}
-            onPress={handleTestConnection}
-            disabled={testingConnection}
-          >
-            <Ionicons name="wifi-outline" size={18} color={colors.primary} />
-            <Text style={styles.maintBtnText}>
-              {testingConnection ? 'Testing Connection...' : 'Save & Test Connection'}
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.statusPill}>
-            <Text style={styles.statusPillLabel}>Status: </Text>
-            <Text style={[styles.statusPillValue, { color: connectionStatus.includes('Connected') ? colors.success : colors.warning }]}>
-              {connectionStatus}
-            </Text>
-          </View>
-        </View>
-      </View>
-
       {/* Account Security & Password Reset Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -442,7 +385,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </View>
 
         <Text style={styles.maintenanceDesc}>
-          Logged in as <Text style={{ color: colors.textPrimary, fontWeight: '700' }}>arshan</Text>. You can update your password below. It will synchronize with your MongoDB database and local device.
+          Logged in as <Text style={{ color: colors.textPrimary, fontWeight: '700' }}>{loggedInUser}</Text>. You can update your password below. It will synchronize with your MongoDB database and local device.
         </Text>
 
         <View style={styles.formGroup}>

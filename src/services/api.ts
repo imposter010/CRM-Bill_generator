@@ -7,7 +7,7 @@ export function getDefaultApiUrl(): string {
   if (typeof window !== 'undefined' && window.location && window.location.origin) {
     return `${window.location.origin}/api`;
   }
-  return 'http://localhost:5001/api';
+  return 'https://crm-bill-generator-server.vercel.app/api';
 }
 
 export const DEFAULT_API_URL = getDefaultApiUrl();
